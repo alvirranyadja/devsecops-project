@@ -1,0 +1,39 @@
+name: CI DevSecOps Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  security:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    # 🐳 Build Docker image
+    - name: Build Docker image
+      run: docker build -t flask-app .
+
+    # 🔍 Install Trivy
+    - name: Install Trivy
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y wget
+        wget https://github.com/aquasecurity/trivy/releases/latest/download/trivy_0.48.0_Linux-64bit.deb
+        sudo dpkg -i trivy_0.48.0_Linux-64bit.deb
+
+    # 🔐 Scan image
+    - name: Scan Docker image
+      run: trivy image flask-app
+
+    # 🔐 Conftest security policy
+    - name: Install Conftest
+      run: |
+        wget https://github.com/open-policy-agent/conftest/releases/latest/download/conftest_0.52.0_Linux_x86_64.tar.gz
+        tar xzf conftest_0.52.0_Linux_x86_64.tar.gz
+        sudo mv conftest /usr/local/bin
+
+    - name: Run Conftest policy check
+      run: conftest test Dockerfile
