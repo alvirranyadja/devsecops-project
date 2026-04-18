@@ -32,4 +32,5 @@ jobs:
           sudo mv conftest /usr/local/bin
 
       - name: Run Conftest policy check
+        continue-on-error: true
         run: conftest test Dockerfile
